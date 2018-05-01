@@ -82,12 +82,12 @@ func GetLights(w http.ResponseWriter, r *http.Request) {
 		ls = append(ls, light)
 	}
 	json.NewEncoder(w).Encode(ls)
-	log.Println(lights)
+	//log.Println(lights)
 }
 
 // GetLight returns a light data
 func GetLight(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	json.NewEncoder(w).Encode(lights[params["id"]])
-	log.Println(lights[params["id"]])
+	//log.Println(lights[params["id"]])
 }
