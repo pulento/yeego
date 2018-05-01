@@ -6,8 +6,8 @@ import (
 	"log"
 	"net/http"
 
-	"bitbucket.org/pulento/yeelight"
 	"github.com/gorilla/mux"
+	"github.com/pulento/yeelight"
 )
 
 var (
