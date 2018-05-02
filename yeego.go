@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/gorilla/mux"
 	"github.com/pulento/yeelight"
@@ -75,6 +76,7 @@ func main() {
 	router.HandleFunc("/lights", GetLights).Methods("GET")
 	router.HandleFunc("/light/{id}", GetLight).Methods("GET")
 	router.HandleFunc("/light/{id}/toggle", ToggleLight).Methods("GET")
+	router.HandleFunc("/light/{id}/{command}/{value}", CommandLight).Methods("GET")
 	log.Fatal(http.ListenAndServe(":8000", router))
 }
 
@@ -113,13 +115,59 @@ func ToggleLight(w http.ResponseWriter, r *http.Request) {
 				Result: "ok",
 				ID:     lights[params["id"]].ID,
 			}
-			json.NewEncoder(w).Encode(res)
 		}
 	} else {
 		res = APIResult{
 			Result: "not found",
 		}
-		json.NewEncoder(w).Encode(res)
 	}
+	json.NewEncoder(w).Encode(res)
+}
 
+// CommandLight sends a command with its parameter
+func CommandLight(w http.ResponseWriter, r *http.Request) {
+	var res APIResult
+	var err error
+	p := mux.Vars(r)
+
+	l := lights[p["id"]]
+	if l != nil {
+		var value int
+		if p["value"] != "" {
+			value, err = strconv.Atoi(p["value"])
+			if err != nil {
+				res = APIResult{
+					Result: "invalid value",
+				}
+			}
+		}
+		if p["command"] == "brightness" {
+			if err == nil {
+				err = l.SetBrightness(value, 0)
+				if err != nil {
+					res = APIResult{
+						Result: "error setting brightness",
+					}
+				} else {
+					res = APIResult{
+						Result: "ok",
+						ID:     l.ID,
+					}
+				}
+			} else {
+				res = APIResult{
+					Result: "invalid value",
+				}
+			}
+		} else {
+			res = APIResult{
+				Result: "invalid command",
+			}
+		}
+	} else {
+		res = APIResult{
+			Result: "not found",
+		}
+	}
+	json.NewEncoder(w).Encode(res)
 }
