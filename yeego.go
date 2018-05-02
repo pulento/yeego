@@ -15,6 +15,13 @@ var (
 	lights     map[string]*yeelight.Light
 )
 
+// APIResult is the response to a command
+type APIResult struct {
+	Result string        `json:"result"`
+	ID     string        `json:"id,omitempty"`
+	Params []interface{} `json:"params,omitempty"`
+}
+
 // Let's roll
 func main() {
 	var err error
@@ -67,6 +74,7 @@ func main() {
 	router.HandleFunc("/", Index).Methods("GET")
 	router.HandleFunc("/lights", GetLights).Methods("GET")
 	router.HandleFunc("/light/{id}", GetLight).Methods("GET")
+	router.HandleFunc("/light/{id}/toggle", ToggleLight).Methods("GET")
 	log.Fatal(http.ListenAndServe(":8000", router))
 }
 
@@ -90,4 +98,28 @@ func GetLight(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	json.NewEncoder(w).Encode(lights[params["id"]])
 	//log.Println(lights[params["id"]])
+}
+
+// ToggleLight toggles light power
+func ToggleLight(w http.ResponseWriter, r *http.Request) {
+	var res APIResult
+	params := mux.Vars(r)
+	if lights[params["id"]] != nil {
+		err := lights[params["id"]].Toggle()
+		if err != nil {
+			log.Println("Error toggling light:", err)
+		} else {
+			res = APIResult{
+				Result: "ok",
+				ID:     lights[params["id"]].ID,
+			}
+			json.NewEncoder(w).Encode(res)
+		}
+	} else {
+		res = APIResult{
+			Result: "not found",
+		}
+		json.NewEncoder(w).Encode(res)
+	}
+
 }
