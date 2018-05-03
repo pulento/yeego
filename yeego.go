@@ -51,10 +51,12 @@ func main() {
 			case <-c:
 				{
 					data := <-c
-					if data.Notification != nil {
-						log.Println("Notification from Channel", *data.Notification)
-					} else {
-						log.Println("Result from Channel", *data.Result)
+					if data != nil {
+						if data.Notification != nil {
+							log.Println("Notification from Channel", *data.Notification)
+						} else {
+							log.Println("Result from Channel", *data.Result)
+						}
 					}
 				}
 			case <-done:
@@ -62,15 +64,15 @@ func main() {
 			}
 		}
 	}(resnot, done)
-
-	for _, l := range lights {
-		prop := "power"
-		err := l.GetProp(prop, "bright")
-		if err != nil {
-			log.Printf("Error getting property %s on %s: %s", prop, l.Address, err)
+	/*
+		for _, l := range lights {
+			prop := "power"
+			err := l.GetProp(prop, "bright")
+			if err != nil {
+				log.Printf("Error getting property %s on %s: %s", prop, l.Address, err)
+			}
 		}
-	}
-
+	*/
 	router := mux.NewRouter()
 	router.HandleFunc("/", Index).Methods("GET")
 	router.HandleFunc("/lights", GetLights).Methods("GET")
@@ -107,7 +109,7 @@ func ToggleLight(w http.ResponseWriter, r *http.Request) {
 	var res APIResult
 	params := mux.Vars(r)
 	if lights[params["id"]] != nil {
-		err := lights[params["id"]].Toggle()
+		reqid, err := lights[params["id"]].Toggle()
 		if err != nil {
 			log.Println("Error toggling light:", err)
 		} else {
@@ -143,7 +145,9 @@ func CommandLight(w http.ResponseWriter, r *http.Request) {
 		}
 		if p["command"] == "brightness" {
 			if err == nil {
-				err = l.SetBrightness(value, 0)
+				var reqid int32
+				reqid, err = l.SetBrightness(value, 0)
+				//log.Println("ReqID:", reqid)
 				if err != nil {
 					res = APIResult{
 						Result: "error setting brightness",
