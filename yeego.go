@@ -50,6 +50,7 @@ func main() {
 			select {
 			case <-c:
 				{
+					// By now just log messages since light data is automatically updated
 					data := <-c
 					if data != nil {
 						if data.Notification != nil {
@@ -64,15 +65,7 @@ func main() {
 			}
 		}
 	}(resnot, done)
-	/*
-		for _, l := range lights {
-			prop := "power"
-			err := l.GetProp(prop, "bright")
-			if err != nil {
-				log.Printf("Error getting property %s on %s: %s", prop, l.Address, err)
-			}
-		}
-	*/
+
 	router := mux.NewRouter()
 	router.HandleFunc("/", Index).Methods("GET")
 	router.HandleFunc("/lights", GetLights).Methods("GET")
