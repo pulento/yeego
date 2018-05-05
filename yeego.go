@@ -103,7 +103,7 @@ func ToggleLight(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	if lights[params["id"]] != nil {
 		reqid, err := lights[params["id"]].Toggle()
-		r := lights[params["id"]].WaitResult(reqid)
+		r := lights[params["id"]].WaitResult(reqid, 2)
 		log.Println("Result received:", *r)
 		if err != nil {
 			log.Println("Error toggling light:", err)
@@ -142,16 +142,22 @@ func CommandLight(w http.ResponseWriter, r *http.Request) {
 			if err == nil {
 				var reqid int32
 				reqid, err = l.SetBrightness(value, 0)
-				r := l.WaitResult(reqid)
-				log.Println("Result received:", *r)
 				if err != nil {
 					res = APIResult{
 						Result: "error setting brightness",
 					}
-				} else {
+				}
+				r := l.WaitResult(reqid, 2)
+				if r != nil {
+					log.Println("Result received:", *r)
 					res = APIResult{
 						Result: "ok",
 						ID:     l.ID,
+					}
+				} else {
+					log.Println("Timeout waiting for reply:", reqid)
+					res = APIResult{
+						Result: "timeout setting brightness",
 					}
 				}
 			} else {
