@@ -34,6 +34,8 @@ func main() {
 	if err != nil {
 		log.Fatal("Error searching lights cannot continue:", err)
 	}
+
+	// Start a result/notification listener for each light
 	resnot := make(chan *yeelight.ResultNotification)
 	done := make(chan bool)
 	for i, l := range lights {
@@ -43,6 +45,11 @@ func main() {
 		} else {
 			log.Printf("Light %s named %s connected to %s", i, l.Name, l.Address)
 		}
+	}
+
+	err = yeelight.SSDPMonitor()
+	if err != nil {
+		log.Println("Error starting SSDP monitor", err)
 	}
 
 	go func(c <-chan *yeelight.ResultNotification, done <-chan bool) {
