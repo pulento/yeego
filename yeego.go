@@ -18,15 +18,16 @@ var (
 
 // APIResult is the response to a command
 type APIResult struct {
-	Result string        `json:"result"`
-	ID     string        `json:"id,omitempty"`
-	Params []interface{} `json:"params,omitempty"`
+	Result string          `json:"result"`
+	ID     string          `json:"id,omitempty"`
+	Params []string        `json:"params,omitempty"`
+	Error  *yeelight.Error `json:"error,omitempty"`
 }
 
 // Let's roll
 func main() {
 	var err error
-
+	//defer profile.Start(profile.MemProfile).Stop()
 	log.Printf("Initial lights search for %d [sec]", timeSearch)
 
 	lights, err = yeelight.Search(timeSearch, "")
@@ -134,7 +135,8 @@ func CommandLight(w http.ResponseWriter, r *http.Request) {
 			value, err = strconv.Atoi(p["value"])
 			if err != nil {
 				res = APIResult{
-					Result: "invalid value",
+					Result: "error",
+					Params: []string{"invalid value"},
 				}
 			}
 		}
@@ -144,35 +146,49 @@ func CommandLight(w http.ResponseWriter, r *http.Request) {
 				reqid, err = l.SetBrightness(value, 0)
 				if err != nil {
 					res = APIResult{
-						Result: "error setting brightness",
+						Result: "error",
+						Params: []string{"error setting brightness"},
 					}
 				}
 				r := l.WaitResult(reqid, 2)
 				if r != nil {
-					log.Println("Result received:", *r)
-					res = APIResult{
-						Result: "ok",
-						ID:     l.ID,
+					if r.Error != nil {
+						log.Println("Error received:", *r.Error)
+						res = APIResult{
+							Result: "error",
+							ID:     l.ID,
+							Error:  r.Error,
+						}
+					} else {
+						res = APIResult{
+							Result: "ok",
+							ID:     l.ID,
+						}
+						log.Println("Result received:", *r)
 					}
 				} else {
 					log.Println("Timeout waiting for reply:", reqid)
 					res = APIResult{
-						Result: "timeout setting brightness",
+						Result: "error",
+						Params: []string{"timeout setting brightness"},
 					}
 				}
 			} else {
 				res = APIResult{
-					Result: "invalid value",
+					Result: "error",
+					Params: []string{"invalid value"},
 				}
 			}
 		} else {
 			res = APIResult{
-				Result: "invalid command",
+				Result: "error",
+				Params: []string{"invalid command"},
 			}
 		}
 	} else {
 		res = APIResult{
-			Result: "not found",
+			Result: "error",
+			Params: []string{"not found"},
 		}
 	}
 	json.NewEncoder(w).Encode(res)
