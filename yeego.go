@@ -47,7 +47,7 @@ func main() {
 		}
 	}
 
-	err = yeelight.SSDPMonitor()
+	err = yeelight.SSDPMonitor(lights)
 	if err != nil {
 		log.Println("Error starting SSDP monitor", err)
 	}
