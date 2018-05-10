@@ -38,16 +38,24 @@ func main() {
 	// Start a result/notification listener for each light
 	resnot := make(chan *yeelight.ResultNotification)
 	done := make(chan bool)
-	for i, l := range lights {
+	for _, l := range lights {
 		_, err = l.Listen(resnot)
 		if err != nil {
 			log.Printf("Error connecting to %s: %s", l.Address, err)
 		} else {
-			log.Printf("Light %s named %s connected to %s", i, l.Name, l.Address)
+			//log.Printf("Light %s named %s connected to %s", i, l.Name, l.Address)
 		}
 	}
+	log.Printf("Found %d lights", len(lights))
 
-	err = yeelight.SSDPMonitor(lights)
+	// Start a SSDP monitor for lights traffic
+	err = yeelight.SSDPMonitor(lights, func(l *yeelight.Light) {
+		if l.Conn == nil {
+			// A new light is automatically added but not connected
+			l.Listen(resnot)
+		}
+	})
+
 	if err != nil {
 		log.Println("Error starting SSDP monitor", err)
 	}
