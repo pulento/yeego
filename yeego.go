@@ -61,7 +61,7 @@ func main() {
 	}
 
 	go func(c <-chan *yeelight.ResultNotification, done <-chan bool) {
-		log.Println("Channel receiver started")
+		log.Println("Messages receiver started")
 		for {
 			select {
 			case <-c:
@@ -119,8 +119,7 @@ func ToggleLight(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	if lights[params["id"]] != nil {
 		reqid, err := lights[params["id"]].Toggle()
-		r := lights[params["id"]].WaitResult(reqid, 2)
-		log.Println("Result received:", *r)
+		lights[params["id"]].WaitResult(reqid, 2)
 		if err != nil {
 			log.Println("Error toggling light:", err)
 		} else {
@@ -162,8 +161,10 @@ func CommandLight(w http.ResponseWriter, r *http.Request) {
 				if err != nil {
 					res = APIResult{
 						Result: "error",
-						Params: []string{"error setting brightness"},
+						Params: []string{err.Error()},
 					}
+					log.Println("Error setting brightness:", err)
+					goto end
 				}
 				r := l.WaitResult(reqid, 2)
 				if r != nil {
@@ -179,7 +180,6 @@ func CommandLight(w http.ResponseWriter, r *http.Request) {
 							Result: "ok",
 							ID:     l.ID,
 						}
-						log.Println("Result received:", *r)
 					}
 				} else {
 					log.Println("Timeout waiting for reply:", reqid)
@@ -206,5 +206,6 @@ func CommandLight(w http.ResponseWriter, r *http.Request) {
 			Params: []string{"not found"},
 		}
 	}
+end:
 	json.NewEncoder(w).Encode(res)
 }
