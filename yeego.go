@@ -84,6 +84,7 @@ func main() {
 
 	router := mux.NewRouter()
 	router.HandleFunc("/", Index).Methods("GET")
+	router.HandleFunc("/light", GetLights).Methods("GET")
 	router.HandleFunc("/lights", GetLights).Methods("GET")
 	router.HandleFunc("/light/{id}", GetLight).Methods("GET")
 	router.HandleFunc("/light/{id}/toggle", ToggleLight).Methods("GET")
