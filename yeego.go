@@ -28,6 +28,8 @@ type APIResult struct {
 func main() {
 	var err error
 	//defer profile.Start(profile.MemProfile).Stop()
+	//defer profile.Start().Stop()
+
 	log.Printf("Initial lights search for %d [sec]", timeSearch)
 
 	lights, err = yeelight.Search(timeSearch, "")
@@ -64,16 +66,13 @@ func main() {
 		log.Println("Messages receiver started")
 		for {
 			select {
-			case <-c:
-				{
-					// By now just log messages since light data is automatically updated
-					data := <-c
-					if data != nil {
-						if data.Notification != nil {
-							log.Println("Notification from Channel", *data.Notification)
-						} else {
-							log.Println("Result from Channel", *data.Result)
-						}
+			case data := <-c:
+				// By now just log messages since light data is automatically updated
+				if data != nil {
+					if data.Notification != nil {
+						log.Println("Notification from Channel", *data.Notification)
+					} else {
+						log.Println("Result from Channel", *data.Result)
 					}
 				}
 			case <-done:
