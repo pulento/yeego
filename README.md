@@ -18,7 +18,7 @@ go build
 Build a Docker image with:
 
 ```
-docker build -t yeego .
+docker build -t yeego https://raw.githubusercontent.com/pulento/yeego/master/Dockerfile
 ```
 
 Then run it:
