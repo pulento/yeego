@@ -12,8 +12,9 @@ import (
 )
 
 var (
-	timeSearch = 3
-	lights     map[string]*yeelight.Light
+	timeSearch     = 3
+	lights         map[string]*yeelight.Light
+	commandTimeout = 2
 )
 
 // APIResult is the response to a command
@@ -119,7 +120,7 @@ func ToggleLight(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	if lights[params["id"]] != nil {
 		reqid, err := lights[params["id"]].Toggle()
-		lights[params["id"]].WaitResult(reqid, 2)
+		lights[params["id"]].WaitResult(reqid, commandTimeout)
 		if err != nil {
 			log.Println("Error toggling light:", err)
 		} else {
@@ -166,7 +167,7 @@ func CommandLight(w http.ResponseWriter, r *http.Request) {
 					log.Println("Error setting brightness:", err)
 					goto end
 				}
-				r := l.WaitResult(reqid, 2)
+				r := l.WaitResult(reqid, commandTimeout)
 				if r != nil {
 					if r.Error != nil {
 						log.Println("Error received:", *r.Error)
