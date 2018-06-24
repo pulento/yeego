@@ -24,7 +24,7 @@ docker build -t pulento/yeego https://raw.githubusercontent.com/pulento/yeego/ma
 Then run it:
 
 ```
-docker run -p 8000:8000 -it --rm --name yeego --net=host pulento/yeego
+docker run -it --rm --name yeego --net=host pulento/yeego
 ```
 
 Note the `--net=host` since Yeego needs multicast to discover lights, and
