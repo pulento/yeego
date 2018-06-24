@@ -33,8 +33,8 @@ its Docker inside a VM inside MacOS X :)
 
 ## Test
 
-Use your prefered browser or just:
+Point your prefered browser:
 
 ```
-curl http://localhost:8000/lights
+http://localhost:8000/
 ```
