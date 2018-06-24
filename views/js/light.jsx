@@ -11,11 +11,14 @@ function RGB_to_HSV(RGB) {
   var r = RGB.r / 255,
     g = RGB.g / 255,
     b = RGB.b / 255;
+
   var computed_H = 0,
     computed_S = 0,
     computed_V = 0;
+
   var min_RGB = Math.min(r, Math.min(g, b)),
     max_RGB = Math.max(r, Math.max(g, b));
+
   // Black-gray-white
   if (min_RGB === max_RGB) {
     computed_V = min_RGB;
@@ -25,6 +28,7 @@ function RGB_to_HSV(RGB) {
       v: computed_V
     };
   }
+
   // Colors other than black-gray-white:
   var d = r === min_RGB ? g - b : b === min_RGB ? r - g : b - r;
   var h = r === min_RGB ? 3 : b === min_RGB ? 1 : 5;
@@ -41,16 +45,16 @@ function RGB_to_HSV(RGB) {
 // Accepts hex string, produces RGB object
 function HEX_to_RGB(hex) {
   var regex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
-  hex = hex.replace(regex, function(m, r, g, b) {
+  hex = hex.replace(regex, function (m, r, g, b) {
     return r + r + g + g + b + b;
   });
   var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
   return result
     ? {
-        r: parseInt(result[1], 16),
-        g: parseInt(result[2], 16),
-        b: parseInt(result[3], 16)
-      }
+      r: parseInt(result[1], 16),
+      g: parseInt(result[2], 16),
+      b: parseInt(result[3], 16)
+    }
     : null;
 }
 
