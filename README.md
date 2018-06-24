@@ -18,13 +18,13 @@ go build
 Build a Docker image with:
 
 ```
-docker build -t yeego https://raw.githubusercontent.com/pulento/yeego/master/Dockerfile
+docker build -t pulento/yeego https://raw.githubusercontent.com/pulento/yeego/master/Dockerfile
 ```
 
 Then run it:
 
 ```
-docker run -p 8000:8000 -it --rm --name yeego-app --net=host yeego
+docker run -p 8000:8000 -it --rm --name yeego --net=host pulento/yeego
 ```
 
 Note the `--net=host` since Yeego needs multicast to discover lights, and
