@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 
 	"github.com/gorilla/mux"
@@ -83,19 +84,26 @@ func main() {
 	}(resnot, done)
 
 	var dir = "views"
+
+	// Serving HTTP port
+	port := os.Getenv("YEEGO_PORT")
+	if port == "" {
+		port = "8080"
+	}
+
 	router := mux.NewRouter()
 
-	//router.HandleFunc("/", Index).Methods("GET")
 	router.HandleFunc("/light", GetLights).Methods("GET")
 	router.HandleFunc("/lights", GetLights).Methods("GET")
 	router.HandleFunc("/light/{id}", GetLight).Methods("GET")
 	router.HandleFunc("/light/{id}/toggle", ToggleLight).Methods("GET")
 	router.HandleFunc("/light/{id}/{command}/{value}", CommandLight).Methods("GET")
 
-	// This will serve files under http://localhost:8000/<filename>
+	// This will serve files static content
 	router.PathPrefix("/").Handler(http.StripPrefix("/", http.FileServer(http.Dir(dir))))
 
-	log.Fatal(http.ListenAndServe(":8000", router))
+	log.Println("Listening HTTP on:", port)
+	log.Fatal(http.ListenAndServe(":"+port, router))
 }
 
 // Index does nothing
