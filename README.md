@@ -36,5 +36,5 @@ its Docker inside a VM inside MacOS X :)
 Point your prefered browser:
 
 ```
-http://localhost:8000/
+http://localhost:8080/
 ```
