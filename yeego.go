@@ -209,6 +209,20 @@ func CommandLight(w http.ResponseWriter, r *http.Request) {
 					Params: []string{"invalid value"},
 				}
 			}
+		} else if p["command"] == "setname" {
+			var reqid int32
+			name := p["value"]
+
+			reqid, err = l.SetName(name, 0)
+			if err != nil {
+				res = APIResult{
+					Result: "error",
+					Params: []string{err.Error()},
+				}
+				log.Println("Error setting name:", err)
+				goto end
+			}
+			l.WaitResult(reqid, commandTimeout)
 		} else {
 			res = APIResult{
 				Result: "error",
