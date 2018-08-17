@@ -6,6 +6,9 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"runtime"
+	"runtime/debug"
+	"runtime/pprof"
 	"strconv"
 
 	"github.com/gorilla/mux"
@@ -99,11 +102,30 @@ func main() {
 	router.HandleFunc("/light/{id}/toggle", ToggleLight).Methods("GET")
 	router.HandleFunc("/light/{id}/{command}/{value}", CommandLight).Methods("GET")
 
+	// Profile stuff
+	router.HandleFunc("/_count", GetGoroutinesCount).Methods("GET")
+	router.HandleFunc("/_stack", GetStackTrace).Methods("GET")
+
 	// This will serve files static content
 	router.PathPrefix("/").Handler(http.StripPrefix("/", http.FileServer(http.Dir(dir))))
 
 	log.Println("Listening HTTP on:", port)
 	log.Fatal(http.ListenAndServe(":"+port, router))
+}
+
+// GetGoroutinesCount returns Goroutines count
+func GetGoroutinesCount(w http.ResponseWriter, r *http.Request) {
+	// Get the count of number of go routines running.
+	count := runtime.NumGoroutine()
+	json.NewEncoder(w).Encode(count)
+	//w.Write([]byte(strconv.Itoa(count)))
+}
+
+// GetStackTrace dumps stack trace
+func GetStackTrace(w http.ResponseWriter, r *http.Request) {
+	stack := debug.Stack()
+	w.Write(stack)
+	pprof.Lookup("goroutine").WriteTo(w, 2)
 }
 
 // Index does nothing
