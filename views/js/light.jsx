@@ -287,7 +287,7 @@ class Light extends React.Component {
               onDoubleClick={this.onDoubleClick}
             />
           </form>
-          {this.state.light.model === "color" ? (
+          {this.state.light.model !== "mono" ? (
             <div className="color-picker">
               <button
                 className="color-picker-btn"
