@@ -1,4 +1,5 @@
 # Yeego
+[![Go Report Card](https://goreportcard.com/badge/github.com/pulento/yeego)](https://goreportcard.com/report/github.com/pulento/yeego)
 
 Yeego is a light backend server to control Xiaomi Yeelight lights. It
 presents a simple REST API for easy frontend integration.
