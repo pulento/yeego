@@ -75,9 +75,15 @@ func main() {
 				// By now just log messages since light data is automatically updated
 				if data != nil {
 					if data.Notification != nil {
-						log.Debugln("Notification from Channel", *data.Notification)
+						log.WithFields(log.Fields{
+							"ID":     (*data.Notification).DevID,
+							"method": (*data.Notification).Method,
+						}).Debugln("Notification:", (*data.Notification).Params)
 					} else {
-						log.Debugln("Result from Channel", *data.Result)
+						log.WithFields(log.Fields{
+							"mID": (*data.Result).ID,
+							"ID":  (*data.Result).DevID,
+						}).Debugln("Result: ", (*data.Result).Result)
 					}
 				}
 			case <-done:
