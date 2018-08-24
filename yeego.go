@@ -9,6 +9,7 @@ import (
 	"runtime/debug"
 	"runtime/pprof"
 	"strconv"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 
@@ -18,8 +19,9 @@ import (
 
 var (
 	timeSearch     = 3
-	lights         map[string]*yeelight.Light
+	lights         = make(map[string]*yeelight.Light)
 	commandTimeout = 2
+	ssdpRescan     = 3 * time.Minute
 )
 
 // APIResult is the response to a command
@@ -39,20 +41,27 @@ func main() {
 	log.SetLevel(log.DebugLevel)
 	log.Printf("Initial lights search for %d [sec]", timeSearch)
 
-	lights, err = yeelight.Search(timeSearch, "")
-	if err != nil {
-		log.Fatal("Error searching lights cannot continue:", err)
-	}
-
 	// Start a result/notification listener for each light
 	resnot := make(chan *yeelight.ResultNotification)
 	done := make(chan bool)
-	for _, l := range lights {
-		_, err = l.Listen(resnot)
-		if err != nil {
+
+	// Initial search
+	err = yeelight.Search(timeSearch, "", lights, func(l *yeelight.Light) {
+		_, lerr := l.Listen(resnot)
+		if lerr != nil {
 			log.Errorf("Error connecting to %s: %s", l.Address, err)
 		}
+	})
+	if err != nil {
+		log.Fatal("Error searching lights cannot continue:", err)
 	}
+	/*
+		for _, l := range lights {
+			_, err = l.Listen(resnot)
+			if err != nil {
+				log.Errorf("Error connecting to %s: %s", l.Address, err)
+			}
+		}*/
 	log.Printf("Found %d lights", len(lights))
 
 	// Start a SSDP monitor for lights traffic
@@ -91,6 +100,24 @@ func main() {
 			}
 		}
 	}(resnot, done)
+
+	// Every 3 min run a SSDP search again
+	go func(refresh <-chan time.Time) {
+		select {
+		case <-refresh:
+			log.Info("SSDP rescan")
+			refresh = time.After(ssdpRescan)
+			err = yeelight.Search(timeSearch, "", lights, func(l *yeelight.Light) {
+				_, lerr := l.Listen(resnot)
+				if lerr != nil {
+					log.Errorf("Error connecting to %s: %s", l.Address, err)
+				}
+			})
+			if err != nil {
+				log.Errorln("Error on SSDP rescan: ", err)
+			}
+		}
+	}(time.After(ssdpRescan))
 
 	var dir = "views"
 
