@@ -3,13 +3,14 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"runtime"
 	"runtime/debug"
 	"runtime/pprof"
 	"strconv"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/gorilla/mux"
 	"github.com/pulento/yeelight"
@@ -35,6 +36,7 @@ func main() {
 	//defer profile.Start(profile.MemProfile).Stop()
 	//defer profile.Start().Stop()
 
+	log.SetLevel(log.DebugLevel)
 	log.Printf("Initial lights search for %d [sec]", timeSearch)
 
 	lights, err = yeelight.Search(timeSearch, "")
@@ -48,9 +50,7 @@ func main() {
 	for _, l := range lights {
 		_, err = l.Listen(resnot)
 		if err != nil {
-			log.Printf("Error connecting to %s: %s", l.Address, err)
-		} else {
-			//log.Printf("Light %s named %s connected to %s", i, l.Name, l.Address)
+			log.Errorf("Error connecting to %s: %s", l.Address, err)
 		}
 	}
 	log.Printf("Found %d lights", len(lights))
@@ -64,20 +64,20 @@ func main() {
 	})
 
 	if err != nil {
-		log.Println("Error starting SSDP monitor", err)
+		log.Errorln("Error starting SSDP monitor", err)
 	}
 
 	go func(c <-chan *yeelight.ResultNotification, done <-chan bool) {
-		log.Println("Messages receiver started")
+		log.Debug("Messages receiver started")
 		for {
 			select {
 			case data := <-c:
 				// By now just log messages since light data is automatically updated
 				if data != nil {
 					if data.Notification != nil {
-						log.Println("Notification from Channel", *data.Notification)
+						log.Debugln("Notification from Channel", *data.Notification)
 					} else {
-						log.Println("Result from Channel", *data.Result)
+						log.Debugln("Result from Channel", *data.Result)
 					}
 				}
 			case <-done:
@@ -109,7 +109,7 @@ func main() {
 	// This will serve files static content
 	router.PathPrefix("/").Handler(http.StripPrefix("/", http.FileServer(http.Dir(dir))))
 
-	log.Println("Listening HTTP on:", port)
+	log.Info("Listening HTTP: ", port)
 	log.Fatal(http.ListenAndServe(":"+port, router))
 }
 
@@ -140,14 +140,12 @@ func GetLights(w http.ResponseWriter, r *http.Request) {
 		ls = append(ls, light)
 	}
 	json.NewEncoder(w).Encode(ls)
-	//log.Println(lights)
 }
 
 // GetLight returns a light data
 func GetLight(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	json.NewEncoder(w).Encode(lights[params["id"]])
-	//log.Println(lights[params["id"]])
 }
 
 // ToggleLight toggles light power
@@ -158,7 +156,7 @@ func ToggleLight(w http.ResponseWriter, r *http.Request) {
 		reqid, err := lights[params["id"]].Toggle()
 		lights[params["id"]].WaitResult(reqid, commandTimeout)
 		if err != nil {
-			log.Println("Error toggling light:", err)
+			log.Errorln("Error toggling light:", err)
 		} else {
 			res = APIResult{
 				Result: "ok",
@@ -200,13 +198,13 @@ func CommandLight(w http.ResponseWriter, r *http.Request) {
 						Result: "error",
 						Params: []string{err.Error()},
 					}
-					log.Println("Error setting brightness:", err)
+					log.Errorln("Error setting brightness:", err)
 					goto end
 				}
 				r := l.WaitResult(reqid, commandTimeout)
 				if r != nil {
 					if r.Error != nil {
-						log.Println("Error received:", *r.Error)
+						log.Errorln("Error received:", *r.Error)
 						res = APIResult{
 							Result: "error",
 							ID:     l.ID,
@@ -219,7 +217,7 @@ func CommandLight(w http.ResponseWriter, r *http.Request) {
 						}
 					}
 				} else {
-					log.Println("Timeout waiting for reply:", reqid)
+					log.Warnln("Timeout waiting for reply:", reqid)
 					res = APIResult{
 						Result: "error",
 						Params: []string{"timeout setting brightness"},
@@ -241,7 +239,7 @@ func CommandLight(w http.ResponseWriter, r *http.Request) {
 					Result: "error",
 					Params: []string{err.Error()},
 				}
-				log.Println("Error setting name:", err)
+				log.Errorln("Error setting name:", err)
 				goto end
 			}
 			l.WaitResult(reqid, commandTimeout)
