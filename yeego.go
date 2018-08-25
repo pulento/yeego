@@ -96,18 +96,20 @@ func main() {
 
 	// Every 3 min run a SSDP search again
 	go func(refresh <-chan time.Time) {
-		select {
-		case <-refresh:
-			log.Info("SSDP rescan")
-			refresh = time.After(ssdpRescan)
-			err = yeelight.Search(timeSearch, "", lights, func(l *yeelight.Light) {
-				_, lerr := l.Listen(resnot)
-				if lerr != nil {
-					log.Errorf("Error connecting to %s: %s", l.Address, err)
+		for {
+			select {
+			case <-refresh:
+				log.Info("SSDP rescan")
+				refresh = time.After(ssdpRescan)
+				err = yeelight.Search(timeSearch, "", lights, func(l *yeelight.Light) {
+					_, lerr := l.Listen(resnot)
+					if lerr != nil {
+						log.Errorf("Error connecting to %s: %s", l.Address, err)
+					}
+				})
+				if err != nil {
+					log.Errorln("Error on SSDP rescan: ", err)
 				}
-			})
-			if err != nil {
-				log.Errorln("Error on SSDP rescan: ", err)
 			}
 		}
 	}(time.After(ssdpRescan))
