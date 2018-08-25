@@ -55,14 +55,7 @@ func main() {
 	if err != nil {
 		log.Fatal("Error searching lights cannot continue:", err)
 	}
-	/*
-		for _, l := range lights {
-			_, err = l.Listen(resnot)
-			if err != nil {
-				log.Errorf("Error connecting to %s: %s", l.Address, err)
-			}
-		}*/
-	log.Printf("Found %d lights", len(lights))
+	log.Infof("Found %d lights", len(lights))
 
 	// Start a SSDP monitor for lights traffic
 	err = yeelight.SSDPMonitor(lights, func(l *yeelight.Light) {
