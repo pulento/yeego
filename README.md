@@ -10,6 +10,7 @@ presents a simple REST API for easy frontend integration.
 
 ```
 go get -u github.com/pulento/yeego
+cd $GOPATH/src/github.com/pulento/yeego
 go build
 ./yeego
 ```
